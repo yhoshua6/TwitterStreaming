@@ -49,7 +49,7 @@ def get_tweets():
 
 afinn = Afinn()
 TCP_IP = "edge.example.com"
-TCP_PORT = 9008
+TCP_PORT = 9007
 conn = None
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((TCP_IP, TCP_PORT))
