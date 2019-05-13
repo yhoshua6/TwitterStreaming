@@ -4,6 +4,28 @@ from pyspark.sql import Row,SQLContext
 import sys
 import requests
 
+import os
+import boto3 
+import pandas as pd
+from boto3.s3.transfer import S3Transfer
+from StringIO import StringIO 
+
+
+# get your credentials from environment variables
+aws_id = 'AKIAIGBSWLZJ6KFZKFLA'
+aws_secret = 'oncXys6f5YK9pdqeHAllT8DoLPIG3915bvSpbI87'
+
+client = boto3.client('s3', aws_access_key_id=aws_id, aws_secret_access_key=aws_secret)
+bucket_name = 'ms33132'
+
+object_key = 'datasetL9.csv'
+csv_obj = client.get_object(Bucket=bucket_name, Key=object_key)
+body = csv_obj['Body']
+csv_string = body.read().decode('utf-8')
+
+my_df = pd.read_csv(StringIO(csv_string))
+print(my_df.to_string())
+
 # create spark configuration
 conf = SparkConf()
 conf.setAppName("TwitterStreamApp")
@@ -11,7 +33,7 @@ conf.setAppName("TwitterStreamApp")
 sc = SparkContext(conf=conf)
 sc.setLogLevel("ERROR")
 # creat the Streaming Context from the above spark context with window size 2 seconds
-ssc = StreamingContext(sc, 2)
+ssc = StreamingContext(sc, 20)
 # setting a checkpoint to allow RDD recovery
 ssc.checkpoint("checkpoint_TwitterApp")
 # read data from port 9009
@@ -65,6 +87,13 @@ def process_rdd(time, rdd):
         hashtag_counts_df.show()
         # call this method to prepare top 10 hashtags DF and send them
         send_df_to_dashboard(hashtag_counts_df)
+
+        my_df = hashtag_counts_df.toPandas()
+        my_df.to_csv("datasetL9.csv")
+        newName = "dataset" + str(time)+".csv"
+        client.upload_file("datasetL9.csv", bucket_name, newName)
+        client.put_object_acl("public-read", bucket_name, newName)
+        print(my_df.to_string())
     except:
         e = sys.exc_info()[0]
         print("Error: %s" % e)
