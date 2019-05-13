@@ -5,21 +5,83 @@
         <title>Top Trending Twitter Hashtags</title>
         <script src='static/Chart.js'></script>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
 
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
 
     </head>
 
     <body>
-        <center>
-            <h2>Top Trending Twitter Hashtags</h2>
-            <div style="width:700px;height=500px">
-                <canvas id="chart"></canvas>
-            </div>
-        </center>
-
+	<div class="col-md-12">
+		<div class="col-md-6">
+			<center>
+        	    <h2>Top Trending</h2>
+	            <div style="width:700px;height=500px">
+        	        <canvas id="chart"></canvas>
+	            </div>
+			</center>
+		</div>
+		<div class="col-md-6">
+			<center>
+			<h2>Sentiment analisys</h2>
+			<div style="width:100%;height=500px">
+	                        <canvas id="chartSentiment"></canvas>
+        	        </div>
+			</center>
+		</div>
+	</div>
         <script>
 
            var ctx = document.getElementById("chart");
+           var sentx =  document.getElementById("chartSentiment");
+
+           var mySentimentChart = new Chart(sentx, {
+                type: 'polarArea',
+                data: {
+                    labels: [{% for item in labelsSenti %}
+                              "{{item}}",
+                             {% endfor %}],
+                    datasets: [{
+                        label: '# of Mentions',
+                        data: [{% for item in valuesSenti %}
+                                  {{item}},
+                                {% endfor %}],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255,99,132,1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero:true
+                            }
+                        }]
+                    }
+                }
+           });
+
 
            var myChart = new Chart(ctx, {
                 type: 'horizontalBar',
@@ -73,19 +135,28 @@
            });
 
 
+
            var src_Labels = [];
            var src_Data = [];
+           var src_senti_Labels = [];
+           var src_senti_Data = [];
+
 
             setInterval(function(){
                 $.getJSON('/refreshData', {
                 }, function(data) {
                     src_Labels = data.sLabel;
                     src_Data = data.sData;
+                    src_senti_Labels = data.xLabel;
+                    src_senti_Data = data.xData;
                 });
 
                 myChart.data.labels = src_Labels;
                 myChart.data.datasets[0].data = src_Data;
                 myChart.update();
+                mySentimentChart.data.labels = src_senti_Labels;
+                mySentimentChart.data.datasets[0].data = src_senti_Data;
+                mySentimentChart.update();
 
             },1000);
 

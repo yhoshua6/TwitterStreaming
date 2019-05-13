@@ -40,9 +40,9 @@ def send_df_to_dashboard(df):
 
 def send_sentiment_to_dashboard(df):
     # extract the hashtags from dataframe and convert them into array
-    top_tags = ["Total","Positive","Negative","Neutral"]
+    top_tags = ["Positive","Negative","Neutral"]
     # extract the counts from dataframe and convert them into array
-    tags_count = [df.select("count").collect()[0][0],df.select("count").collect()[1][0],df.select("count").collect()[2][0],df.select("count").collect()[3][0]]
+    tags_count = [df.select("count").collect()[0][0],df.select("count").collect()[1][0],df.select("count").collect()[2][0]]
     print(tags_count)
     url = 'http://edge.example.com:5001/updateDataSentiment'
     request_data = {'label': str(top_tags), 'data': str(tags_count)}
@@ -108,7 +108,7 @@ def sentiment(avg_senti_val):
 # split each tweet into words
 
 tweets = dataStream.flatMap(lambda text : text.split("\n"))
-#tweetshash = tweets.filter(lambda line: '#' in line)
+#tweets = tweets.filter(lambda line: '#' in line)
 
 prevFloat = tweets.filter(lambda x : isfloat(x) == True)
 total = prevFloat.count()
@@ -116,8 +116,8 @@ positive = prevFloat.filter(lambda x : sentiment(x) == 'POSITIVE').count()
 negative = prevFloat.filter(lambda x : sentiment(x) == 'NEGATIVE').count()
 neutral = prevFloat.filter(lambda x : sentiment(x) == 'NEUTRAL').count()
 
-all = total.union(positive)
-all = all.union(negative)
+#all = total.union(positive)
+all = positive.union(negative)
 all = all.union(neutral)
 
 #all = total.zip(positive).collect()
